@@ -3,6 +3,8 @@ import threading
 import User
 import array as arr #more efficient data storage than a list
 
+#change
+print("wdd2")
 serverPort = 5053
 serverSocket = socket(AF_INET, SOCK_DGRAM) #datagram or packet being received
 serverSocket.bind(('',serverPort))
