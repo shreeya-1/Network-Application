@@ -48,8 +48,15 @@ def new_client(message, clientAdd):
             #update their ip address to new ip addr
             users[pos].updateIP(clientAdd)
         
+            if actives: #if there are any active users
+                temp = ""
+                for active in actives:
+                    temp = temp + active.getUname() + "|"
+            else:
+                temp = "NULL"
+
             actives.append(users[pos])
-            retmsg = "LOGRT/" + "1"
+            retmsg = "LOGRT/" + "1/" + temp
         
         else:
             retmsg = "LOGRT/" + "0"
@@ -62,12 +69,7 @@ def new_client(message, clientAdd):
         pwd = parts[2]
         print(uname)
         print(pwd)
-        bool = "/" in uname
-        bool2 = "/" in pwd
-        if bool == True or bool2 == True:
-            print("should be")
-            vreg = False
-            error = "SLASH" #slashes
+        
 
         if users:
             index = 0
@@ -75,18 +77,41 @@ def new_client(message, clientAdd):
                 test = users[index] 
                 if test.getUname() == uname:
                     vreg = False
-                    error = "TKN" #taken
+                    
         
         if vreg == False:
-            retmsg = "REGRT/" + "0/" + error
+            retmsg = "REGRT/" + "0/" 
         else:
             newuser = User(uname,pwd,clientAdd)
             users.append(newuser) #register new user
-
-            retmsg = "REGRT/" + "1/" 
+            actives.append(newuser)
+            ##STATUS UPDATE broadcast that they are online 
+            
+            if actives: #if there are any active users send that to client
+                temp = ""
+                for active in actives:
+                    temp = temp + active.getUname() + "|"
+            else:
+                temp = "NULL"
+            retmsg = "REGRT/" + "1/" + temp
 
     print ("SENDING TO CLIENT: " + retmsg)
     serverSocket.sendto(retmsg.encode(),clientAdd)
+    msg, addr = serverSocket.recvfrom(2048)
+    msg = msg.decode()
+    comps = msg.split("/")
+    if comps[0] == "CHAT":
+        recip = comps[1]
+        txt = comps[2]
+
+        for user in users:
+            if recip == user.getUname():
+                dest = user.getIP
+                srcip = str(clientAdd[0])
+                outgoing = "CHAT/" + srcip + "/" + txt
+                print("OVER HERE" + dest)
+                serverSocket.sendto(outgoing.encode(), dest)
+                print("Message sent to user.")
  
 def start():
     while True:

@@ -12,6 +12,9 @@ class User:
     def getUname(self):
         return self.uname
 
+    def getIP(self):
+        return self.addr
+
     def getPwd(self):
         return self.pwd
 

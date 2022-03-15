@@ -60,12 +60,20 @@ fdback, addr = clientSocket.recvfrom(2048)
 fdback = fdback.decode()
 print(fdback)
 
+online = False
 
 flist = fdback.split("/")
 if flist[0] == "LOGRT":
 
     if (int(flist[1]) == 1):         #login succesful
         print (f"Your login was succesful, you are now online.")
+        online = True
+
+        others = flist[2]
+        if others == "NULL":
+            unames = "There are no other users online."
+        else:
+            unames = others.split("|")
         #STATUS MUST BE UPDATED ON SERVER SIDE BEFORE FBCK SENT
     else:
         print(f"Your username or password is incorrect.")
@@ -75,20 +83,33 @@ elif flist[0] == "REGRT":
     if (int(flist[1])==1):
             #sign up succesful
         print("Your sign up was succesful. You are now a registered user.")
+        online = True
+        others = flist[2]
+        if others == "NULL":
+            unames = "There are no other users online."
+        else:
+            unames = others.split("|")
+        
+
     else:
          emsg = "That username is already taken, please enter a different username."
          print (emsg)
          uname = input("Username: ")
     
-recip = input("List of online users")
-message = input('Input message to send to user, enter "QUIT" to log off:  ')
-if message != "QUIT":
-    online = True
 
-while online:
-    
-    clientSocket.sendto(message.encode(),(serverName,serverPort))
-    print ("Message has been sent")
+
+while online : 
+    print ("************List of online users************")
+    #unames will need to be updated or status broadcasts implemented
+    for usr in unames:
+        print(usr + "\n")
+
+    recip = input("Who would you like to send a message to?\nEnter username of recipient: ")
+    message = input("Enter message or press QUIT: ")
+
+    msg = "CHAT/" + recip +"/" + message
+    clientSocket.sendto(msg.encode(),(serverName,serverPort))
+    print ("Message has been sent to server")
     modMsg, clientAddress = clientSocket.recvfrom(2048) #2048 specifies amt of space in buffer
     print (modMsg.decode())
     #clientSocket.close()
