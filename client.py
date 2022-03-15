@@ -22,7 +22,7 @@ if (startmsg == 1) :
     logpwd = input ("Enter your password: ")
     
     #usernames cannot end w/ .
-
+#MAKING A CHANGE TO A FILE
     #send to server to check user
     creds = "LOG." + loguser + "." + logpwd #user credentials
     clientSocket.sendto(creds.encode(),(serverName,serverPort))
