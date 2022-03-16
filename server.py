@@ -10,6 +10,14 @@ serverSocket.bind(('',serverPort))
 users = [] #append users to this list as they register
 actives = []
 
+def broadcast (usr, list):
+    update = "STTS/" + usr + "/1"
+    if list: #if there are other actives
+        for actv in list:
+            dest1 = actv.getIP()
+            serverSocket.sendto(update.encode(),dest1)
+
+
 def new_client(message, clientAdd):
     print (f"Receiving from new client at {clientAdd}")
     receivedmsg = message.decode() #decode function interprets message from bytes to chars, DO SOMETHING W RECIEVED MSG
@@ -44,25 +52,28 @@ def new_client(message, clientAdd):
         if valid:
             #USER IS NOW LOGGED IN AND ONLINE
             #UPDATE STATUS
-
+            broadcast(uname,actives)
             #update their ip address to new ip addr
             users[pos].updateIP(clientAdd)
         
-            if actives: #if there are any active users
+            if actives: #if there are any other active users notify new user as soon as they log in
                 temp = ""
                 for active in actives:
                     temp = temp + active.getUname() + "|"
             else:
                 temp = "NULL"
 
-            actives.append(users[pos])
+            actives.append(users[pos]) #only add here
             retmsg = "LOGRT/" + "1/" + temp
         
         else:
             retmsg = "LOGRT/" + "0"
         
+        print ("SENDING TO CLIENT: " + retmsg)
+        serverSocket.sendto(retmsg.encode(),clientAdd)
+        
 
-    if msgtype == "REG":
+    elif msgtype == "REG":
         vreg = True
 
         uname = parts[1]
@@ -72,21 +83,19 @@ def new_client(message, clientAdd):
         
 
         if users:
-            index = 0
             for user in users:
-                test = users[index] 
-                if test.getUname() == uname:
-                    vreg = False
-                    
+                if user.getUname() == uname:
+                    vreg = False             
         
         if vreg == False:
             retmsg = "REGRT/" + "0/" 
         else:
             newuser = User(uname,pwd,clientAdd)
             users.append(newuser) #register new user
-            actives.append(newuser)
             ##STATUS UPDATE broadcast that they are online 
-            
+            broadcast(uname, actives)
+            actives.append(newuser) #only added now 
+
             if actives: #if there are any active users send that to client
                 temp = ""
                 for active in actives:
@@ -94,24 +103,29 @@ def new_client(message, clientAdd):
             else:
                 temp = "NULL"
             retmsg = "REGRT/" + "1/" + temp
+            
+        print ("SENDING TO CLIENT: " + retmsg)
+        serverSocket.sendto(retmsg.encode(),clientAdd)
 
-    print ("SENDING TO CLIENT: " + retmsg)
-    serverSocket.sendto(retmsg.encode(),clientAdd)
-    msg, addr = serverSocket.recvfrom(2048)
-    msg = msg.decode()
-    comps = msg.split("/")
-    if comps[0] == "CHAT":
-        recip = comps[1]
-        txt = comps[2]
+   
+    elif msgtype == "CHAT":
+        
+        recip = parts[1]
+        txt = parts[2]
 
         for user in users:
             if recip == user.getUname():
-                dest = user.getIP
-                srcip = str(clientAdd[0])
-                outgoing = "CHAT/" + srcip + "/" + txt
-                print("OVER HERE" + dest)
+                dest = user.getIP()
+                outgoing = "CHAT/" + recip + "/" + txt
+                
+                #send actual msg to recipient
                 serverSocket.sendto(outgoing.encode(), dest)
-                print("Message sent to user.")
+
+                tick2 = "Your message has been delivered to " + recip
+                print (tick2)
+
+                #send confirmation to sender
+                serverSocket.sendto(tick2.encode(),clientAdd)
  
 def start():
     while True:
@@ -119,7 +133,7 @@ def start():
          message, clientAddress = serverSocket.recvfrom(2048) #clientAddress taken from message receive
          thread = threading.Thread(target= new_client, args = (message, clientAddress)) #new thread created for every client
          thread.start()
-         print(f"ACTIVE CONNECTIONS {threading.activeCount() }") # -1 because want to exclude main thread 
+         print(f"ACTIVE CONNECTIONS {threading.activeCount() - 1}")# -1 because want to exclude main thread 
 
         
 print ("STARTING - server is starting")

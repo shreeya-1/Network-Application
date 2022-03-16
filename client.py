@@ -4,6 +4,7 @@
 
 #only client needs to know ip address of server since server will receive from packet 
 import socket
+import threading
 serverName =  "192.168.1.68"
 #socket.gethostbyname(socket.gethostname())
 
@@ -78,6 +79,7 @@ if flist[0] == "LOGRT":
     else:
         print(f"Your username or password is incorrect.")
 
+
 elif flist[0] == "REGRT":
     print(flist[1])
     if (int(flist[1])==1):
@@ -95,9 +97,44 @@ elif flist[0] == "REGRT":
          emsg = "That username is already taken, please enter a different username."
          print (emsg)
          uname = input("Username: ")
+         while ("/" in uname):
+             print("Forward slashes not permitted in username.")
+             uname = input("Enter a valid username: ")
+
+         reg = "REG/" + uname +"/" + regpwd
+         clientSocket.sendto(reg.encode(),(serverName,serverPort))
+
+
+
+def incoming():
+    while True: # currently listening indefinitely
+         newmsg, addr = clientSocket.recvfrom(2048)
+         newmsg = newmsg.decode()
+
+         comps = newmsg.split("/") 
+         mtype = comps[0]   
+         if (mtype == "CHAT"):
+             print("You received a message from " + comps[1])
+             print ("MESSAGE: " + comps[2])
     
+         elif (mtype == "STTS"):
+ #notify users when someone logs on /out
+            if (int(comps[2]) == 1):
+               print(comps[1] + " is now online.")
+
+            elif(int(comps[2]) == 0):
+               print(comps[1] + " is now offline.")
+         else:
+             #confirmation message
+             print(newmsg)
+
+if online:
+    thread = threading.Thread(target= incoming, args = ())
+    thread.start()
 
 
+
+#ONLY AFTER USER HAS REGISTERED OR LOGGED IN
 while online : 
     print ("************List of online users************")
     #unames will need to be updated or status broadcasts implemented
@@ -106,15 +143,23 @@ while online :
 
     recip = input("Who would you like to send a message to?\nEnter username of recipient: ")
     message = input("Enter message or press QUIT: ")
-
-    msg = "CHAT/" + recip +"/" + message
-    clientSocket.sendto(msg.encode(),(serverName,serverPort))
-    print ("Message has been sent to server")
-    modMsg, clientAddress = clientSocket.recvfrom(2048) #2048 specifies amt of space in buffer
-    print (modMsg.decode())
-    #clientSocket.close()
-    message = input('Input message to send to user, enter "QUIT" to log off:  ')
     if message == "QUIT":
         online = False
+        break
+    
+
+    msg = "CHAT/" + recip +"/" + message #will include message hash later
+    clientSocket.sendto(msg.encode(),(serverName,serverPort))
+    print ("Message has been sent to server")
+
+    #dangerous, rather create new thread in case no message received from server
+    # should it wait for confirmation before another message is allowed to be sent?
+
+#stop and wait for ack?
+    conf, clientAddress = clientSocket.recvfrom(2048) #2048 specifies amt of space in buffer
+    print(conf.decode()) #confirmation message
+
+clientSocket.close()
+   
 
 
