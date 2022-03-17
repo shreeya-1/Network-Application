@@ -127,7 +127,7 @@ def incoming():
          else:
              #confirmation message
              print(newmsg)
-
+j
 if online:
     thread = threading.Thread(target= incoming, args = ())
     thread.start()
