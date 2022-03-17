@@ -5,7 +5,7 @@
 #only client needs to know ip address of server since server will receive from packet 
 import socket
 import threading
-serverName =  "192.168.1.68"
+serverName =  "10.0.0.104"
 #socket.gethostbyname(socket.gethostname())
 
 serverPort = 5053 # first few addresses are reserved for common protocols such as http 
@@ -156,8 +156,8 @@ while online :
     # should it wait for confirmation before another message is allowed to be sent?
 
 #stop and wait for ack?
-    conf, clientAddress = clientSocket.recvfrom(2048) #2048 specifies amt of space in buffer
-    print(conf.decode()) #confirmation message
+    #conf, clientAddress = clientSocket.recvfrom(2048) #2048 specifies amt of space in buffer
+    #print(conf.decode()) #confirmation message
 
 clientSocket.close()
    
