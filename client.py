@@ -5,7 +5,8 @@
 #only client needs to know ip address of server since server will receive from packet 
 import socket
 import threading
-serverName =  "192.168.1.68"
+serverName =  "10.0.0.104"
+#"192.168.1.68" Shreeya's home
 #socket.gethostbyname(socket.gethostname())
 
 serverPort = 5053 # first few addresses are reserved for common protocols such as http 
@@ -114,8 +115,13 @@ def incoming():
          comps = newmsg.split("/") 
          mtype = comps[0]   
          if (mtype == "CHAT"):
-             print("You received a message from " + comps[1])
-             print ("MESSAGE: " + comps[2])
+            print("You received a message from " + comps[1])
+            print ("MESSAGE: " + comps[2]) 
+            #find the hash value of message
+            hashMessage = str(hash(comps[2]))
+            #compare the hash values to verify correctness of message  
+            if (hashMessage == str(comps[3])):
+                print("Message received is correct")   #error handing will be handled in GUI section
     
          elif (mtype == "STTS"):
  #notify users when someone logs on /out
@@ -146,9 +152,11 @@ while online :
     if message == "QUIT":
         online = False
         break
+    # hash the message to be sent 
+    hash_message = str(hash(message))
     
 
-    msg = "CHAT/" + recip +"/" + message #will include message hash later
+    msg = "CHAT/" + recip +"/" + message + "/" + hash_message #will include message hash later
     clientSocket.sendto(msg.encode(),(serverName,serverPort))
     print ("Message has been sent to server")
 

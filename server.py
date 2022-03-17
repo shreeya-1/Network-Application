@@ -28,7 +28,7 @@ def new_client(message, clientAdd):
     serverSocket.sendto(confirmed.encode(),clientAdd)
 
 
-    #split string according to fullstops, first element will always be msg type
+    #split string according to forward slash, first element will always be msg type
     parts =  receivedmsg.split("/")
     msgtype = parts[0]
 
@@ -112,11 +112,12 @@ def new_client(message, clientAdd):
         
         recip = parts[1]
         txt = parts[2]
+        hashed = parts[3]
 
         for user in users:
             if recip == user.getUname():
                 dest = user.getIP()
-                outgoing = "CHAT/" + recip + "/" + txt
+                outgoing = "CHAT/" + recip + "/" + txt + "/" + hashed
                 
                 #send actual msg to recipient
                 serverSocket.sendto(outgoing.encode(), dest)
