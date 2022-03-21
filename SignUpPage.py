@@ -1,6 +1,4 @@
 from tkinter import *
-from tkinter import messagebox
-import client
 
 root = Tk()
 
@@ -44,23 +42,8 @@ password_field.grid(row=2, column=1, ipadx="100")
 confirmpassword_field.grid(row=3, column = 1, ipadx= "100")
 
 def SignedUp():
-     usr = username_field.get()
-     passw = password_field.get()
-     cpassw = confirmpassword_field.get()
-     if("/" in usr):
-        messagebox.showerror("showerror", "Error / cannot be used at the end of a username")
-        
-        import LoginPage
-     elif(len(usr) == 0 or len(passw) == 0 or len(cpassw)==0):
-        messagebox.showerror("showerrror", "Error, please fill in a username and password")
-        
-     elif(passw != cpassw):
-        messagebox.showerror("showerrror", "Passwords do not match")
-     else :
-         c = client
-         c.signUp(usr, passw)
-         root.destroy()
-         import GUIbox
+    root.destroy()
+    import GUIbox
     
 def backToLogin():
     root.destroy()

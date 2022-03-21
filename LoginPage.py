@@ -1,11 +1,9 @@
 from tkinter import *
 from tkinter import messagebox
-import client
 
 ##import client
 
 root = Tk()
-
 
 ##set the background colour of GUI window
 root.configure(background='white')
@@ -47,19 +45,17 @@ password_field.grid(row=2, column=1, ipadx="100")
 def retrieve_input():
     usr = username_field.get()
     passw = password_field.get()
-    if("/" in usr):
+    if(usr.endswith("/")):
         messagebox.showerror("showerror", "Error / cannot be used at the end of a username")
         
         import LoginPage
     elif(len(usr) == 0 or len(passw) == 0):
         messagebox.showerror("showerrror", "Error, please fill in a username and password")
-    
-    
-    else :
        
-        client.logIn(usr, passw)
-        root.destroy()
-        import GUIbox
+        
+    ##client.LogIn(usr, passw)
+    root.destroy()
+    import GUIbox
     
 def signUpPage():
     root.destroy()
