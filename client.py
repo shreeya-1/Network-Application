@@ -82,6 +82,7 @@ def signUp(usrname, pwd):
             retmsg = "Your sign up was succesful. You are now a registered user."
             
             others = flist[2]
+            global unames
             if others == "NULL":
                 unames = "There are no other users online."
             else:
@@ -143,6 +144,13 @@ def incoming():
          if (mtype == "CHAT"):
              print("You received a message from " + comps[1])
              print ("MESSAGE: " + comps[2])
+             #find the hash value of value of message 
+             hashMessage = str(hash(comps[2]))
+             #compare the hash values to verify correctness of message
+             if(hashMessage == str(comps[3])):
+                 print("Message received is correct") #error handling in GUI section
+             else:
+                 print("Message received is erroneous")
     
          elif (mtype == "STTS"):
  #notify users when someone logs on /out
@@ -173,9 +181,10 @@ while online :
     if message == "QUIT":
         online = False
         break
-    
+    #hash the message to be sent 
+    hash_message = str(hash(message))
 
-    msg = "CHAT/" + recip +"/" + message #will include message hash later
+    msg = "CHAT/" + recip +"/" + message + "/" + hash_message #will include message hash later
     clientSocket.sendto(msg.encode(),(serverName,serverPort))
     print ("Message has been sent to server")
 
