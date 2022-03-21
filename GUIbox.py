@@ -1,5 +1,6 @@
 from http import server
 from tkinter import *
+import client
 root = Tk()
 
 root.title('WhatsDown')
@@ -43,11 +44,18 @@ def Exit():
    root.destroy()
    import LoginPage
    
+def curseSelctor():
+   to_field.delete("1.0", "end")
+   to_field.insert(INSERT, subjects.get(ACTIVE))
+   print(subjects.get(ACTIVE))
+   
+      
+      
 
 tolbl = Label(ctr_right, text = "To: ", bg = "white")
 tolbl.grid(row = 0, column = 0)
 
-to_field = Entry(ctr_right)
+to_field = Text(ctr_right, height=1, width = 3)
 
 to_field.grid(row =0 , column = 1, ipadx="100")
 
@@ -60,16 +68,35 @@ sendMessage_field = Entry(ctr_right)
 
 sendMessage_field.grid(row = 2, column = 0)
 
+##send message button 
+
+sendMessage = Button(ctr_right, text="Send")
+
+sendMessage.grid(row = 2, column = 1)
+
+## chat button 
+
+chatButton = Button(ctr_right, text= "Chat", command=curseSelctor)
+chatButton.grid(row = 0, column = 0)
+
 
 # Creates Listbox of existing subjects, from .txt files in directory of program
 subjects = Listbox(ctr_left,width=32,height=30)
-subjects.insert(1, "User 1")
-subjects.insert(2, "User 1")
-subjects.insert(3, "User 1")
-subjects.insert(4, "User 1")
-subjects.insert(5, "User 1")
+sub = ["User 1" , "User 2", "User 3"]
 
-subjects.itemconfig(1, {'bg': 'OrangeRed3'})
+for i in range(len(sub)):
+   
+   subjects.insert(i, sub[i])
+   
+   
+for i in range(len(sub)):
+   if(sub[i] == "User 1"):
+      subjects.itemconfig(i, {'bg': 'OrangeRed3'})
+      ##print(sub[i])
+
+
+
+
 
 ##for this_file in glob.glob("*.txt"):
    ## subjects.insert(0, this_file.split('.')[0])
