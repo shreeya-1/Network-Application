@@ -15,12 +15,13 @@ clientSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #AF_INET specifi
 
 startmsg = input("Enter 1 to Log in and 2 to Sign up: ")
 startmsg = int(startmsg)
+online = False
+
 
 if (startmsg == 1) :
     loguser = input ("Enter your username: ")
     logpwd = input ("Enter your password: ")
     
-    #usernames cannot end w/ .
 
     #send to server to check user
     creds = "LOG/" + loguser + "/" + logpwd #user credentials
@@ -53,57 +54,83 @@ if (startmsg == 2):
 
 
 #feeback from log in or registration from server
-fdback2, addr = clientSocket.recvfrom(2048)
-fdback2 = fdback2.decode()
-print(fdback2)
 
-fdback, addr = clientSocket.recvfrom(2048) 
-fdback = fdback.decode()
-print(fdback)
+def signUp(usrname, pwd):
 
-online = False
+    #sends off login details to server
+    reg = "REG/" + usrname +"/" + pwd
+    clientSocket.sendto(reg.encode(),(serverName,serverPort))
 
-flist = fdback.split("/")
-if flist[0] == "LOGRT":
+    #receives confirmation + feedback from server
+    fdback2, addr = clientSocket.recvfrom(2048)
+    fdback2 = fdback2.decode()
+    #print(fdback2)
 
-    if (int(flist[1]) == 1):         #login succesful
-        print (f"Your login was succesful, you are now online.")
-        online = True
+    fdback, addr = clientSocket.recvfrom(2048) 
+    fdback = fdback.decode()
+    #print(fdback)
 
-        others = flist[2]
-        if others == "NULL":
-            unames = "There are no other users online."
+    flist = fdback.split("/")
+    retmsg = ""
+
+    if flist[0] == "REGRT":
+        print(flist[1])
+        if (int(flist[1])==1):
+                #sign up succesful
+            global online
+            online = True
+            retmsg = "Your sign up was succesful. You are now a registered user."
+            
+            others = flist[2]
+            if others == "NULL":
+                unames = "There are no other users online."
+            else:
+                unames = others.split("|")
+            
+
         else:
-            unames = others.split("|")
-        #STATUS MUST BE UPDATED ON SERVER SIDE BEFORE FBCK SENT
-    else:
-        print(f"Your username or password is incorrect.")
+            retmsg = "That username is already taken, please enter a different username."
+            #print (retmsg)
+            #uname = input("Username: ")
+            
+
+            #reg = "REG/" + uname +"/" + regpwd
+            #clientSocket.sendto(reg.encode(),(serverName,serverPort))
+    return online + "/" + retmsg + "/" + others
 
 
-elif flist[0] == "REGRT":
-    print(flist[1])
-    if (int(flist[1])==1):
-            #sign up succesful
-        print("Your sign up was succesful. You are now a registered user.")
-        online = True
-        others = flist[2]
-        if others == "NULL":
-            unames = "There are no other users online."
+
+def logIn(usrname, pwd):
+    creds = "LOG/" + usrname + "/" + pwd #user credentials
+    clientSocket.sendto(creds.encode(),(serverName,serverPort))
+
+    fdback2, addr = clientSocket.recvfrom(2048)
+    fdback2 = fdback2.decode()
+    print(fdback2)
+
+    fdback, addr = clientSocket.recvfrom(2048) 
+    fdback = fdback.decode()
+    print(fdback)
+
+
+    flist = fdback.split("/")
+    if flist[0] == "LOGRT":
+
+        if (int(flist[1]) == 1):         #login succesful
+            retmsg = "Your login was succesful, you are now online."
+            global online
+            online = True
+
+            others = flist[2]
+            #if others == "NULL":
+             #   unames = "There are no other users online."
+            #else:
+              #  unames = others.split("|")
+            #STATUS MUST BE UPDATED ON SERVER SIDE BEFORE FBCK SENT
         else:
-            unames = others.split("|")
-        
+            retmsg = "Your username or password is incorrect."
 
-    else:
-         emsg = "That username is already taken, please enter a different username."
-         print (emsg)
-         uname = input("Username: ")
-         while ("/" in uname):
-             print("Forward slashes not permitted in username.")
-             uname = input("Enter a valid username: ")
-
-         reg = "REG/" + uname +"/" + regpwd
-         clientSocket.sendto(reg.encode(),(serverName,serverPort))
-
+    return online + "/" + retmsg + "/" + others
 
 
 def incoming():
@@ -127,7 +154,7 @@ def incoming():
          else:
              #confirmation message
              print(newmsg)
-j
+
 if online:
     thread = threading.Thread(target= incoming, args = ())
     thread.start()
