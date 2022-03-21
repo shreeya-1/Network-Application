@@ -1,5 +1,7 @@
+from http import server
 from socket import *
 import threading
+from xmlrpc import client
 from User import *
 
 serverPort = 5053 
@@ -113,20 +115,39 @@ def new_client(message, clientAdd):
         recip = parts[1]
         txt = parts[2]
         hashed = parts[3]
+        message_num = parts[4]
 
         for user in users:
             if recip == user.getUname():
                 dest = user.getIP()
-                outgoing = "CHAT/" + recip + "/" + txt + "/" + hashed
+                outgoing = "CHAT/" + recip + "/" + txt + "/" + hashed + "/" + message_num 
                 
                 #send actual msg to recipient
                 serverSocket.sendto(outgoing.encode(), dest)
 
-                tick2 = "Your message has been delivered to " + recip
-                print (tick2)
 
-                #send confirmation to sender
-                serverSocket.sendto(tick2.encode(),clientAdd)
+                #send confirmation to sender --> in the form of an ACK message
+                ack1 = "ACK/" +"1/" + recip + "/" + message_num
+                serverSocket.sendto(ack1.encode(),clientAdd)
+                print("ACK1: message has been received by server")
+                #serverSocket.sendto(tick2.encode(),clientAdd)
+    
+    elif msgtype == "ACK":
+        ack_type = parts[1]
+        ack_to = parts[2]
+        message_num = parts[3]
+        #finding the username of the client returning the ack 
+        for x in users:
+            if clientAdd == x.getIP():
+                who_from = x.getUname()
+
+        for user in users:
+            if ack_to == user.getUname():
+                destination = user.getIP()
+                # ack message to send
+                ack2=  "ACK/" + "2/" + ack_to + "/" + message_num + "/" + who_from 
+                #send ack2 to client to notify that recipient has received the message
+                serverSocket.sendto(ack2.encode(), destination)
  
 def start():
     while True:

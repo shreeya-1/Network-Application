@@ -3,15 +3,29 @@
 # creating client first
 
 #only client needs to know ip address of server since server will receive from packet 
+import time
 import socket
 import threading
-serverName =  "10.0.0.104"
+serverName =  "10.0.0.101"
 #socket.gethostbyname(socket.gethostname())
 
 serverPort = 5053 # first few addresses are reserved for common protocols such as http 
             # must specify port where messages will be received
 #creating new socket for client
 clientSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #AF_INET specifies length of ip address
+
+#message number
+message_num = 0
+#ack timer
+start_time = 0
+end_time = 0
+
+#method to track the time of the rtt of the acks 
+def ackTime(start_time ,end_time):
+    diff= end_time - start_time   #it is in seconds 
+    if(end_time == 0):
+        print("Message (" + message_num + ") has failed - resend the message")  #messages should be stored so that user does not have to resend 
+    print(diff)
 
 startmsg = input("Enter 1 to Log in and 2 to Sign up: ")
 startmsg = int(startmsg)
@@ -139,10 +153,16 @@ def incoming():
          newmsg, addr = clientSocket.recvfrom(2048)
          newmsg = newmsg.decode()
 
+         #checking the time of the ack rtt 
+         if(start_time != 0):
+             t = threading.Timer(15.0, ackTime(start_time , end_time))    #give the ack 15 seconds to return 
+             t.start()
+
          comps = newmsg.split("/") 
          mtype = comps[0]   
          if (mtype == "CHAT"):
-             print("You received a message from " + comps[1])
+             message_from = comps[1]
+             print("You received a message from " + message_from)
              print ("MESSAGE: " + comps[2])
              #find the hash value of value of message 
              hashMessage = str(hash(comps[2]))
@@ -151,6 +171,25 @@ def incoming():
                  print("Message received is correct") #error handling in GUI section
              else:
                  print("Message received is erroneous")
+             messageNumber = comps[4]
+             #send an ACK(2) to server to acknowledge receipt of message 
+             ack2 = "ACK/" + "2/" + message_from + "/" + messageNumber
+             clientSocket.sendto(ack2.encode(), (serverName,serverPort))
+         
+         elif (mtype == "ACK"):
+             ack_type = comps[1]
+             if(ack_type == "2"):
+                message_num = comps[3]
+                ack_from = comps[4]
+                #stop the time 
+                end_time = time.time()
+                print("FINAL ACK returned: message number " + message_num + " sent to " + ack_from + " has been received ")
+             elif (ack_type == "1"):
+                 recip = comps[2]
+                 message_num = comps[3]
+                 print("Message " + message_num + " for " + recip +" has been received by the server")
+
+
     
          elif (mtype == "STTS"):
  #notify users when someone logs on /out
@@ -184,12 +223,15 @@ while online :
     #hash the message to be sent 
     hash_message = str(hash(message))
 
-    msg = "CHAT/" + recip +"/" + message + "/" + hash_message #will include message hash later
+    msg = "CHAT/" + recip +"/" + message + "/" + hash_message + "/" + message_num #includes hash & message number 
     clientSocket.sendto(msg.encode(),(serverName,serverPort))
     print ("Message has been sent to server")
+    #message number increment 
+    message_num= message_num+1
+    #start the time 
+    start_time = time.time()
 
-    #dangerous, rather create new thread in case no message received from server
-    # should it wait for confirmation before another message is allowed to be sent?
+
 
 #stop and wait for ack?
     #conf, clientAddress = clientSocket.recvfrom(2048) #2048 specifies amt of space in buffer
